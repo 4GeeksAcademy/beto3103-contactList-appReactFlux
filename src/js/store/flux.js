@@ -1,42 +1,84 @@
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
+			contacts: [],
+			mainUrl: "https://playground.4geeks.com/apis/fake/contact/agenda/beto3103",
+			putUrl: "https://playground.4geeks.com/apis/fake/contact/"
 		},
 		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
+			getContacts: async () => {
+				let store = getStore()
+				try {
+					let response = await fetch(store.mainUrl)
+					///apis/fake/contact/agenda/{agenda_slug}
+					let data = await response.json()
+					setStore({
+						contacts: data
+					})
+				} catch (error) {
+					console.log(error)
+				}
 			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
+
+			addContact: async (data) => {
+				let store = getStore()
+				try {
+					let response = await fetch(`${store.putUrl}`,
+						{
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify(data)
+						})
+
+					if (response.ok) {
+						getActions().getContacts()
+					}
+
+					return response.status
+
+				} catch (error) {
+					console.log(error)
+				}
 			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
+			deleteContact: async (id) => {
+				let store = getStore()
+				let actions = getActions()
+				try {
+					let response = await fetch(`${store.putUrl}${id}`, {
+						method: "DELETE",
+						headers: {
+							"Content-Type": "application/json"
+						}
+					})
+					if (response.ok) {
+						actions.getContacts()
+					}
+				} catch (error) {
+					console.log(error);
+				}
+			},
 
-				//reset the global store
-				setStore({ demo: demo });
+			editContact: async (id, contact) => {
+				let store = getStore()
+				let actions = getActions()
+				try {
+					let response = await fetch(`${store.putUrl}${id}`,
+						{
+							method: "PUT",
+							headers: {
+								"Content-Type": "application/json"
+							},
+							body: JSON.stringify(contact)
+						})
+
+					if (response.ok) {
+						actions.getContacts()
+					}
+
+				} catch (error) {
+					console.log(error)
+				}
 			}
 		}
 	};
